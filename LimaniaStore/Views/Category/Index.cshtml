@@ -1,0 +1,20 @@
+﻿@model List<Category>
+
+		<table class="table table-bordered table-striped">
+	@foreach(var item in Model){
+		<thead>
+		<tr>
+		<th>Kategori ID</th>
+		<th>Kategori İsmi</th>
+		<th>Kategori Numarası</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr>
+			<td>@item.Id</td>
+			<td>@item.Name</td>
+			<td>@item.DisplayOrder</td>
+		</tr>
+		</tbody>
+	}
+		</table>
