@@ -1,4 +1,4 @@
-using LimaniaStore.Models;
+using Limania.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 

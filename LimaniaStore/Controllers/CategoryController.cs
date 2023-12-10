@@ -1,22 +1,21 @@
-﻿using LimaniaStore.Data;
-using LimaniaStore.Models;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
+using Limania.DataAccess.Data;
+using Limania.Models;
+using Limania.DataAccess.Repository.IRepository;
 namespace LimaniaStore.Controllers
 {
 	public class CategoryController : Controller
 	{
-		private readonly ApplicationDbContext _db;
-		public CategoryController(ApplicationDbContext db)
+		private readonly ICategoryRepository _categoryRepository;
+		public CategoryController(ICategoryRepository db)
 		{
-			_db = db;
+			_categoryRepository = db;
 		}
 
 		public async Task<IActionResult> Index()
 		{
-			List<Category> datas = await _db.Categories.ToListAsync();
+			List<Category> datas = _categoryRepository.GetAll().ToList();
 			return View(datas);
 
 		}
@@ -35,9 +34,9 @@ namespace LimaniaStore.Controllers
 			if (ModelState.IsValid)
 			{
 
-				await _db.Categories.AddAsync(category);
+				_categoryRepository.Add(category);
 				TempData["success"] = "Kategori Ekleme Başarılı!";
-				await _db.SaveChangesAsync();
+				_categoryRepository.Save();
 				return RedirectToAction("Index", "Category");
 			}
 			return View();
@@ -48,7 +47,7 @@ namespace LimaniaStore.Controllers
 			{
 				return NotFound();
 			}
-			Category? category = await _db.Categories.FindAsync(id);
+			Category? category = _categoryRepository.Get(c => c.Id == id);
 			if (category == null)
 			{
 				return NotFound();
@@ -59,22 +58,22 @@ namespace LimaniaStore.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Edit(Category category)
 		{
-			_db.Categories.Update(category);
+			_categoryRepository.Update(category);
 			TempData["success"] = "Kategori Düzenleme Başarılı!";
-			_db.SaveChanges();
+			_categoryRepository.Save();
 			return RedirectToAction("Index", "Category");
 		}
 
 		public async Task<IActionResult> Delete(int? id)
 		{
-			Category? obj = await _db.Categories.FindAsync(id);
+			Category? obj = _categoryRepository.Get(c => c.Id == id);
 			if (obj == null)
 			{
 				return NotFound();
 			}
-			_db.Categories.Remove(obj);
+			_categoryRepository.Remove(obj);
 			TempData["success"] = "Kategori Silme Başarılı!";
-			await _db.SaveChangesAsync();
+			_categoryRepository.Save();
 			return RedirectToAction("Index", "Category");
 		}
 	}

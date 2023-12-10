@@ -1,4 +1,6 @@
-using LimaniaStore.Data;
+using Limania.DataAccess.Data;
+using Limania.DataAccess.Repository;
+using Limania.DataAccess.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace LimaniaStore
@@ -14,7 +16,7 @@ namespace LimaniaStore
 			builder.Services.AddDbContext<ApplicationDbContext>(options =>
 				options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
+			builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
 
 			var app = builder.Build();
 

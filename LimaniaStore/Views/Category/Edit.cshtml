@@ -1,30 +1,38 @@
 ﻿@model Category
-<form method="post">
-	<div class="border p-3 mt-4">
-		<div class="row pb-2">
-			<h2 class="text-primary">Kategori Düzenleme</h2>
-			<hr />
-			<div class="mb-3 p-1">
-				<label asp-for="Name"></label>
-				<input asp-for="Name" type="text" class="form-control" />
-				<span asp-validation-for="Name" class="text-danger"></span>
-			</div>
-			<div class="mb-3 p-1">
-				<label asp-for="DisplayOrder"></label>
-				<input asp-for="DisplayOrder" type="number" class="form-control" />
-				<span asp-validation-for="DisplayOrder" class="text-danger"></span>
-			</div>
-		</div>
-		<div class="row">
-			<div class="col-6 col-md-3">
-				<button type="submit" class="btn btn-primary form-control">Edit</button>
-			</div>
-			<div class="col-6 col-md-3">
-				<a asp-action="Index" asp-controller="Category" class="btn btn-secondary form-control">Back to List</a>
-			</div>
+<div class="card shadow border-0 mt-4 ">
+<div class="card-header bg-secondary bg-gradient ml-0 py-3">
+	<div class="row">
+		<div class="col-12 text-center">
+			<h2 class="text-white py-2">Edit Category</h2>
 		</div>
 	</div>
-</form>
+</div>
+<div class="card-body p-4">
+	<form method="post" class="row">
+		<div class="border p-3 mt-4">
+				<div class="form-floating col-12 py-2">
+					<input asp-for="Name" type="text" class="form-control border-1 shadow" />
+					<label asp-for="Name"class="ms-2"></label>
+					<span asp-validation-for="Name" class="text-danger"></span>
+				</div>
+				<div class="form-floating col-12 py-2">
+					<input asp-for="DisplayOrder" type="number" class="form-control border-1 shadow" />
+					<label asp-for="DisplayOrder" class="ms-2"></label>
+					<span asp-validation-for="DisplayOrder" class="text-danger"></span>
+				</div>
+			<div class="row">
+				<div class="col-6 col-md-3">
+					<button type="submit" class="btn btn-primary form-control">Edit</button>
+				</div>
+				<div class="col-6 col-md-3">
+					<a asp-action="Index" asp-controller="Category" class="btn btn-secondary form-control">Back to List</a>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+</div>
+
 @* @section Scripts{
 	@{
 		<partial name ="_ValidationScriptsPartial"/>
