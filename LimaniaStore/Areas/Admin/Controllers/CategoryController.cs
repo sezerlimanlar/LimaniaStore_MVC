@@ -3,19 +3,20 @@ using Microsoft.EntityFrameworkCore;
 using Limania.DataAccess.Data;
 using Limania.Models;
 using Limania.DataAccess.Repository.IRepository;
-namespace LimaniaStore.Controllers
+namespace LimaniaStore.Areas.Admin.Controllers
 {
+	[Area("Admin")]
 	public class CategoryController : Controller
 	{
-		private readonly ICategoryRepository _categoryRepository;
-		public CategoryController(ICategoryRepository db)
+		private readonly IUnitOfWork _unitOfWork;
+		public CategoryController(IUnitOfWork unitOfWork)
 		{
-			_categoryRepository = db;
+			_unitOfWork = unitOfWork;
 		}
 
 		public async Task<IActionResult> Index()
 		{
-			List<Category> datas = _categoryRepository.GetAll().ToList();
+			List<Category> datas = _unitOfWork.Category.GetAll().ToList();
 			return View(datas);
 
 		}
@@ -34,9 +35,9 @@ namespace LimaniaStore.Controllers
 			if (ModelState.IsValid)
 			{
 
-				_categoryRepository.Add(category);
+				_unitOfWork.Category.Add(category);
 				TempData["success"] = "Kategori Ekleme Başarılı!";
-				_categoryRepository.Save();
+				_unitOfWork.Save();
 				return RedirectToAction("Index", "Category");
 			}
 			return View();
@@ -47,7 +48,7 @@ namespace LimaniaStore.Controllers
 			{
 				return NotFound();
 			}
-			Category? category = _categoryRepository.Get(c => c.Id == id);
+			Category? category = _unitOfWork.Category.Get(c => c.Id == id);
 			if (category == null)
 			{
 				return NotFound();
@@ -58,22 +59,22 @@ namespace LimaniaStore.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Edit(Category category)
 		{
-			_categoryRepository.Update(category);
+			_unitOfWork.Category.Update(category);
 			TempData["success"] = "Kategori Düzenleme Başarılı!";
-			_categoryRepository.Save();
+			_unitOfWork.Save();
 			return RedirectToAction("Index", "Category");
 		}
 
 		public async Task<IActionResult> Delete(int? id)
 		{
-			Category? obj = _categoryRepository.Get(c => c.Id == id);
+			Category? obj = _unitOfWork.Category.Get(c => c.Id == id);
 			if (obj == null)
 			{
 				return NotFound();
 			}
-			_categoryRepository.Remove(obj);
+			_unitOfWork.Category.Remove(obj);
 			TempData["success"] = "Kategori Silme Başarılı!";
-			_categoryRepository.Save();
+			_unitOfWork.Save();
 			return RedirectToAction("Index", "Category");
 		}
 	}
