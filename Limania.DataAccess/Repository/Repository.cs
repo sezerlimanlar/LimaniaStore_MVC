@@ -18,21 +18,21 @@ namespace Limania.DataAccess.Repository
 			_db = db;
 			dbSet = _db.Set<T>();
 		}
-		public void Add(T entity)
+		public async void Add(T entity)
 		{
-			dbSet.Add(entity);
+			await dbSet.AddAsync(entity);
 		}
 
-		public T Get(Expression<Func<T, bool>> filter)
+		public async Task<T> Get(Expression<Func<T, bool>> filter)
 		{
 			IQueryable<T> query = dbSet;
 			query = query.Where(filter);
-			return query.FirstOrDefault();
+			return await query.FirstOrDefaultAsync();
 		}
 
 		public IEnumerable<T> GetAll()
 		{
-			IQueryable<T> query = dbSet;
+			IEnumerable<T> query = dbSet;
 			return query.ToList();
 		}
 

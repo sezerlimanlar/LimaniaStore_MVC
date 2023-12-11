@@ -7,7 +7,6 @@ public class Category
 {
 	[Key]
 	public int Id { get; set; }
-	[Required(ErrorMessage = "Kategori ismi boş geçilemez")]
 	[DisplayName("Kategori İsmi")]
 	[MaxLength(30, ErrorMessage = "Maks limit 30 karakter.")]
 	public string Name { get; set; }

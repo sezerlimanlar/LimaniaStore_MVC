@@ -8,6 +8,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
 	[Area("Admin")]
 	public class CategoryController : Controller
 	{
+
 		private readonly IUnitOfWork _unitOfWork;
 		public CategoryController(IUnitOfWork unitOfWork)
 		{
@@ -16,7 +17,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
 
 		public async Task<IActionResult> Index()
 		{
-			List<Category> datas = _unitOfWork.Category.GetAll().ToList();
+			IEnumerable<Category> datas = _unitOfWork.Category.GetAll();
 			return View(datas);
 
 		}
@@ -37,7 +38,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
 
 				_unitOfWork.Category.Add(category);
 				TempData["success"] = "Kategori Ekleme Başarılı!";
-				_unitOfWork.Save();
+				await _unitOfWork.Save();
 				return RedirectToAction("Index", "Category");
 			}
 			return View();
@@ -48,7 +49,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
 			{
 				return NotFound();
 			}
-			Category? category = _unitOfWork.Category.Get(c => c.Id == id);
+			Category? category = await _unitOfWork.Category.Get(c => c.Id == id);
 			if (category == null)
 			{
 				return NotFound();
@@ -67,14 +68,14 @@ namespace LimaniaStore.Areas.Admin.Controllers
 
 		public async Task<IActionResult> Delete(int? id)
 		{
-			Category? obj = _unitOfWork.Category.Get(c => c.Id == id);
+			Category? obj = await _unitOfWork.Category.Get(c => c.Id == id);
 			if (obj == null)
 			{
 				return NotFound();
 			}
 			_unitOfWork.Category.Remove(obj);
 			TempData["success"] = "Kategori Silme Başarılı!";
-			_unitOfWork.Save();
+			await _unitOfWork.Save();
 			return RedirectToAction("Index", "Category");
 		}
 	}

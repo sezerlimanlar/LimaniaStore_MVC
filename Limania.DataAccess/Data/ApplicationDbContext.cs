@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
 	}
 
 	public DbSet<Category> Categories { get; set; }
+	public DbSet<Product> Products { get; set; }
 
 	protected override void OnModelCreating(ModelBuilder modelBuilder)
 	{
@@ -25,6 +26,37 @@ public class ApplicationDbContext : DbContext
 		new Category { Id = 8, Name = "Çocuk", DisplayOrder = 8 },
 		new Category { Id = 9, Name = "Yetişkin", DisplayOrder = 9 }
 					);
+		modelBuilder.Entity<Product>().HasData(
+
+			new Product
+			{
+				Id = 1,
+				Tittle = "Nazım İle Piraye",
+				Description = "Öyle ki bir mektubunda Piraye'ye 'Sen benim en yakın insanımsın. ' diyor Nazım.",
+				Author = "Nazım Hikmet",
+				ISBN = "SWD9999001",
+				ListPrice = 99,
+				Price = 90,
+				Price50 = 85,
+				Price100 = 80,
+				CategoryId = 5,
+				ImageUrl=""
+			},
+			new Product
+			{
+				Id = 2,
+				Tittle = "Hanımın Çiftliği",
+				Description = "Hanımın Çiftliği, Orhan Kemal'in üç ciltlik romanıdır. Kitap, Vukuat Var, Hanımın Çiftliği ve Kaçak ciltlerinden oluşmaktadır",
+				Author = "Orhan Kemal",
+				ISBN = "SWD9999002",
+				ListPrice = 105,
+				Price = 100,
+				Price50 = 95,
+				Price100 = 90,
+				CategoryId = 9,
+				ImageUrl=""
+			}
+			);
 	}
 
 }
