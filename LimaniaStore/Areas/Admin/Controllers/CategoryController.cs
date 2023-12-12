@@ -15,7 +15,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
 			_unitOfWork = unitOfWork;
 		}
 
-		public async Task<IActionResult> Index()
+		public  IActionResult Index()
 		{
 			IEnumerable<Category> datas = _unitOfWork.Category.GetAll();
 			return View(datas);
@@ -62,7 +62,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
 		{
 			_unitOfWork.Category.Update(category);
 			TempData["success"] = "Kategori Düzenleme Başarılı!";
-			_unitOfWork.Save();
+			await _unitOfWork.Save();
 			return RedirectToAction("Index", "Category");
 		}
 

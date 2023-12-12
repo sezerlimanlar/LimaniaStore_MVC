@@ -47,7 +47,9 @@ namespace Limania.Models
 		[Required]
 		public int? CategoryId { get; set; } //Foreign Key
 		[ForeignKey("CategoryId")]
-		public Category Category { get; set; }
-		public string ImageUrl { get; set; }
+		public Category? Category { get; set; }
+
+		[ValidateNever]
+		public string? ImageUrl { get; set; }
 	}
 }
