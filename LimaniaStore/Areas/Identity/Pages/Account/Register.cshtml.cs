@@ -108,10 +108,21 @@ namespace LimaniaStore.Areas.Identity.Pages.Account
             public string? Role { get; set; }
             [ValidateNever]
             public IEnumerable<SelectListItem> RoleList { get; set; }
+
+            [Required]
+			public string? Name { get; set; }
+
+			public string? StreetAddress { get; set; }
+            public string? City { get; set; }
+            public string? State { get; set; }
+            public string? PostalCode { get; set; }
+            public string? PhoneNumber { get; set; }
+
+
         }
 
 
-        
+
 
         public async Task OnGetAsync(string returnUrl = null)
         {
@@ -127,8 +138,8 @@ namespace LimaniaStore.Areas.Identity.Pages.Account
             {
                 RoleList = _roleManager.Roles.Select(x => x.Name).Select(i => new SelectListItem
                 {
-                    Text=i,
-                    Value=i
+                    Text = i,
+                    Value = i
                 })
             };
             ReturnUrl = returnUrl;
@@ -145,13 +156,20 @@ namespace LimaniaStore.Areas.Identity.Pages.Account
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
+                user.StreedAddress = Input.StreetAddress;
+                user.Name = Input.Name;
+				user.City = Input.City;
+                user.State = Input.State;
+                user.PostalCode = Input.PostalCode;
+                user.PhoneNumber = Input.PhoneNumber;
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
 
-                    if (!String.IsNullOrEmpty(Input.Role)){
+                    if (!String.IsNullOrEmpty(Input.Role))
+                    {
                         await _userManager.AddToRoleAsync(user, Input.Role);
                     }
                     else
