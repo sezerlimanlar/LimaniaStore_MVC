@@ -120,23 +120,23 @@ namespace LimaniaStore.Areas.Customer.Controllers
 			if (applicationUser.CompanyId.GetValueOrDefault() == 0)
 			{
 				var domain = "https://localhost:7026/";
-				var options = new Stripe.Checkout.SessionCreateOptions
+				var options = new SessionCreateOptions
 				{
-					SuccessUrl = domain + $"/customer/cart/OrderConfirmation?id={ShoppingCartVM.OrderHeader.Id}",
+					SuccessUrl = domain + $"customer/cart/OrderConfirmation?id={ShoppingCartVM.OrderHeader.Id}",
 					CancelUrl = domain + $"customer/cart/index",
-					LineItems = new List<Stripe.Checkout.SessionLineItemOptions>(),
+					LineItems = new List<SessionLineItemOptions>(),
 					Mode = "payment",
 				};
 
 				foreach (var item in ShoppingCartVM.ShoppingCartList)
 				{
-					var sessionLineItem = new Stripe.Checkout.SessionLineItemOptions
+					var sessionLineItem = new SessionLineItemOptions
 					{
-						PriceData = new Stripe.Checkout.SessionLineItemPriceDataOptions
+						PriceData = new SessionLineItemPriceDataOptions
 						{
 							UnitAmount = (long)(item.Price * 100),
 							Currency = "usd",
-							ProductData = new Stripe.Checkout.SessionLineItemPriceDataProductDataOptions
+							ProductData = new SessionLineItemPriceDataProductDataOptions
 							{
 								Name = item.Product.Tittle
 							}
@@ -146,7 +146,7 @@ namespace LimaniaStore.Areas.Customer.Controllers
 					options.LineItems.Add(sessionLineItem);
 				}
 
-				var service = new Stripe.Checkout.SessionService();
+				var service = new SessionService();
 				Session session = service.Create(options);
 				_unitOfWork.OrderHeader.UpdateStripePaymentID(ShoppingCartVM.OrderHeader.Id, session.Id, session.PaymentIntentId);
 				await _unitOfWork.Save();
@@ -155,21 +155,22 @@ namespace LimaniaStore.Areas.Customer.Controllers
 
 			}
 
-			return RedirectToAction("OrderConfirmation", new { id = ShoppingCartVM.OrderHeader.Id });
+			return RedirectToAction(nameof(OrderConfirmation), new { id = ShoppingCartVM.OrderHeader.Id });
 		}
 
+		[HttpGet]
 		public async Task<IActionResult> OrderConfirmation(int id)
 		{
 			OrderHeader orderHeader = await _unitOfWork.OrderHeader.Get(u => u.Id == id, includeProperties: "ApplicationUser");
-			if(orderHeader.PaymentStatus!= SD.PaymentStatusDelayedPayment)
+			if (orderHeader.PaymentStatus != SD.PaymentStatusDelayedPayment)
 			{
 				var service = new SessionService();
 				Session session = service.Get(orderHeader.SessionId);
-				if(session.PaymentStatus.ToLower() == "paid")
+				if (session.PaymentStatus.ToLower() == "paid")
 				{
-					_unitOfWork.OrderHeader.UpdateStripePaymentID(id,session.Id, session.PaymentIntentId);
+					_unitOfWork.OrderHeader.UpdateStripePaymentID(id, session.Id, session.PaymentIntentId);
 					_unitOfWork.OrderHeader.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
-					 await	_unitOfWork.Save();
+					await _unitOfWork.Save();
 				}
 			}
 			List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == orderHeader.ApplicationUserId).ToList();

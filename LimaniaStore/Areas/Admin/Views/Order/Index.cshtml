@@ -1,57 +1,103 @@
-﻿@model List<Product>
+﻿@{
+	var status = Context.Request.Query["status"];
+	var pending = "text-primary";
+	var completed = "text-primary";
+	var approved = "text-primary";
+	var all = "text-primary";
+	var inprocess = "text-primary";
+
+	switch (status)
+	{
+		case "pending":
+			pending = "active text-white bg-primary";
+			break;
+		case "inprocess":
+			inprocess = "active text-white bg-primary";
+			break;
+		case "all":
+			all = "active text-white bg-primary";
+			break;
+		case "approved":
+			approved = "active text-white bg-primary";
+			break;
+		case "completed":
+			completed = "active text-white bg-primary";
+			break;
+		default:
+			all = "active text-white bg-primary";
+			break;
+	}
+
+}
 
 <div class="card shadow border-0 mt-4 ">
 	<div class="card-header bg-secondary bg-gradient ml-0 py-3">
 		<div class="row">
 			<div class="col-12 text-center">
-				<h2 class="text-white py-2">Product List</h2>
+				<h2 class="text-white py-2">Order List</h2>
 			</div>
 		</div>
 	</div>
 	<div class="card-body pb-4">
-		<div class="row pb-3 ">
-			<div class="col-12 text-end">
-				<a asp-controller="Product" asp-action="Upsert" class="btn btn-primary"><i class="bi bi-plus"></i> Create New Product</a>
-			</div>
+		<div class="d-flex justify-content-between pb-5 pt-2">
+			<span></span>
+			<ul class="list-group list-group-horizontal-sm">
+				<a style="text-decoration:none;" asp-controller="Order" asp-action="Index" asp-route-status="inprocess">
+					<li class="list-group-item @inprocess">In Process</li>
+				</a>
+				<a style="text-decoration:none;" asp-controller="Order" asp-action="Index" asp-route-status="pending">
+					<li class="list-group-item @pending">Payment Pending</li>
+				</a>
+				<a style="text-decoration:none;" asp-controller="Order" asp-action="Index" asp-route-status="completed">
+				<li class="list-group-item @completed">Completed</li>
+				</a>
+				<a style="text-decoration:none;" asp-controller="Order" asp-action="Index" asp-route-status="approved">
+					<li class="list-group-item @approved">Approved</li>
+				</a>
+				<a style="text-decoration:none;" asp-controller="Order" asp-action="Index" asp-route-status="all">
+				<li class="list-group-item @all">All</li>
+				</a>
+			</ul>
 		</div>
 		<table id="tblData" class="table table-bordered " style="width:100%">
 			<thead>
 				<tr>
-					<th>Product Author</th>
-					<th>Product Tittle</th>
-					<th>Product ISBN</th>
-					<th>Product Price</th>
-					<th>Category</th>
-					<th>Delete & Edit</th>
+					<th>ID</th>
+					<th>Name</th>
+					<th>Phone Number</th>
+					<th>Email</th>
+					<th>Status</th>
+					<th>Total</th>
+					<th></th>
 
 				</tr>
 			</thead>
 			@* @foreach (var item in Model)
 			{
-					<tr>
-						<td>@item.Author</td>
-						<td>@item.Tittle</td>
-						<td>@item.ISBN</td>
-						<td>@item.Price</td>
-						<td>@item.Category.Name</td>
-						<td>
-							<div class="btn-group" role="group">
-								<a asp-controller="Product" asp-action="Upsert" class="btn btn-dark mx-2 rounded-start-3" asp-route-id="@item.Id">
-									<i class="bi bi-pencil-square"></i> Edit
-								</a>
-								<a asp-controller="Product" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger mx-2 rounded-end-3">
-									<i class="bi bi-trash"></i> Delete
-								</a>
-							</div>
+			<tr>
+			<td>@item.Author</td>
+			<td>@item.Tittle</td>
+			<td>@item.ISBN</td>
+			<td>@item.Price</td>
+			<td>@item.Category.Name</td>
+			<td>
+			<div class="btn-group" role="group">
+			<a asp-controller="Product" asp-action="Upsert" class="btn btn-dark mx-2 rounded-start-3" asp-route-id="@item.Id">
+			<i class="bi bi-pencil-square"></i> Edit
+			</a>
+			<a asp-controller="Product" asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger mx-2 rounded-end-3">
+			<i class="bi bi-trash"></i> Delete
+			</a>
+			</div>
 
-						</td>
+			</td>
 
-					</tr> *@
+			</tr> *@
 		</table>
 	</div>
 </div>
 
 
-							@section Scripts{
-								<script src="~/js/order.js"></script>
-							}
+@section Scripts {
+	<script src="~/js/order.js"></script>
+}		
