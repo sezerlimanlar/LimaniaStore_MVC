@@ -2,15 +2,19 @@
 using Limania.Models;
 using Limania.Models.ViewModels;
 using Limania.Utility;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Security.Claims;
 
 namespace LimaniaStore.Areas.Admin.Controllers
 {
 	[Area("Admin")]
 	public class OrderController : Controller
 	{
+		[BindProperty]
+		public OrderVM OrderVM { get; set; }
 		private readonly IUnitOfWork _unitOfWork;
 		public OrderController(IUnitOfWork unitOfWork)
 		{
@@ -24,20 +28,59 @@ namespace LimaniaStore.Areas.Admin.Controllers
 		}
 		public async Task<IActionResult> Details(int orderId)
 		{
-			OrderVM orderVM = new()
+			OrderVM OrderVM = new()
 			{
 				OrderHeader = await _unitOfWork.OrderHeader.Get(u => u.Id == orderId, includeProperties: "ApplicationUser"),
 				OrderDetail = _unitOfWork.OrderDetail.GetAll(u => u.OrderHeaderId == orderId, includeProperties: "Product")
 			};
-			return View(orderVM);
+			return View(OrderVM);
 		}
-		#region API CALLS
-		[HttpGet]
+
+
+		[Authorize(Roles = SD.Role_Admin+","+ SD.Role_Employee)]
+        public async Task<IActionResult> UpdateOrderDetail()
+        {
+			var orderHeaderFromDb = await  _unitOfWork.OrderHeader.Get(u => u.Id == OrderVM.OrderHeader.Id);
+			orderHeaderFromDb.Name = OrderVM.OrderHeader.Name;
+            orderHeaderFromDb.PhoneNumber = OrderVM.OrderHeader.PhoneNumber;
+            orderHeaderFromDb.StreetAddress = OrderVM.OrderHeader.StreetAddress;
+            orderHeaderFromDb.City = OrderVM.OrderHeader.City;
+            orderHeaderFromDb.State = OrderVM.OrderHeader.State;
+            orderHeaderFromDb.PostalCode = OrderVM.OrderHeader.PostalCode;
+			if (!string.IsNullOrEmpty(OrderVM.OrderHeader.Carrier))
+			{
+				orderHeaderFromDb.Carrier = OrderVM.OrderHeader.Carrier;
+			}
+            if (!string.IsNullOrEmpty(OrderVM.OrderHeader.TrackingNumber))
+            {
+                orderHeaderFromDb.TrackingNumber = OrderVM.OrderHeader.TrackingNumber;
+            }
+			_unitOfWork.OrderHeader.Update(orderHeaderFromDb);
+
+			TempData["Success"] = "Order Details Updated Successfully";
+
+			await _unitOfWork.Save();
+            return RedirectToAction(nameof(Details),new {orderId = orderHeaderFromDb.Id});
+        }
+        #region API CALLS
+        [HttpGet]
 		public IActionResult GetAll(string status)
 		{
 			IEnumerable<OrderHeader> objOrderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
 
-			switch (status)
+			if(User.IsInRole(SD.Role_Admin)|| User.IsInRole(SD.Role_Employee))
+			{
+				objOrderHeaders = _unitOfWork.OrderHeader.GetAll(includeProperties: "ApplicationUser").ToList();
+			}
+			else
+			{
+				var claimsIdentity = (ClaimsIdentity)User.Identity;
+				var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
+				objOrderHeaders = _unitOfWork.OrderHeader.GetAll(u => u.ApplicationUserId == userId, includeProperties: "ApplicationUser");
+
+            }
+
+            switch (status)
 			{
 				case "pending":
 					objOrderHeaders = objOrderHeaders.Where(u => u.PaymentStatus == SD.PaymentStatusDelayedPayment);
