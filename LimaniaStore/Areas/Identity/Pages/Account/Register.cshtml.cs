@@ -133,14 +133,7 @@ namespace LimaniaStore.Areas.Identity.Pages.Account
 
 		public async Task OnGetAsync(string returnUrl = null)
 		{
-			if (!await _roleManager.RoleExistsAsync(SD.Role_User_Cust))
-			{
-				await _roleManager.CreateAsync(new IdentityRole(SD.Role_User_Cust));
-				await _roleManager.CreateAsync(new IdentityRole(SD.Role_User_Comp));
-				await _roleManager.CreateAsync(new IdentityRole(SD.Role_Admin));
-				await _roleManager.CreateAsync(new IdentityRole(SD.Role_Employee));
 
-			}
 			Input = new()
 			{
 				RoleList = _roleManager.Roles.Select(x => x.Name).Select(i => new SelectListItem
@@ -174,7 +167,7 @@ namespace LimaniaStore.Areas.Identity.Pages.Account
 				user.State = Input.State;
 				user.PostalCode = Input.PostalCode;
 				user.PhoneNumber = Input.PhoneNumber;
-				if(Input.Role == SD.Role_User_Comp)
+				if (Input.Role == SD.Role_User_Comp)
 				{
 					user.CompanyId = Input.CompanyId;
 				}
@@ -211,7 +204,15 @@ namespace LimaniaStore.Areas.Identity.Pages.Account
 					}
 					else
 					{
-						await _signInManager.SignInAsync(user, isPersistent: false);
+						if (User.IsInRole(SD.Role_Admin))
+						{
+							TempData["success"] = "New User Created Succesfully!";
+						}
+						else
+						{
+							await _signInManager.SignInAsync(user, isPersistent: false);
+
+						}
 						return LocalRedirect(returnUrl);
 					}
 				}

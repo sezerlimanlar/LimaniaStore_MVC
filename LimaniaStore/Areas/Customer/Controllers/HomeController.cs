@@ -1,7 +1,9 @@
 using Limania.DataAccess.Migrations;
 using Limania.DataAccess.Repository.IRepository;
 using Limania.Models;
+using Limania.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 using System.Security.Claims;
@@ -22,6 +24,15 @@ namespace LimaniaStore.Areas.Customer.Controllers
 
         public IActionResult Index()
         {
+            var claimsIdentity = (ClaimsIdentity)User.Identity;
+            var claim = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier);
+
+            if (claim != null)
+            {
+                var count = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == claim.Value).Count();
+                HttpContext.Session.SetInt32(SD.SessionCart, count);
+            }
+
             IEnumerable<Product> productList = _unitOfWork.Product.GetAll(includeProperties: "Category");
             return View(productList);
         }
@@ -45,20 +56,23 @@ namespace LimaniaStore.Areas.Customer.Controllers
             var userId = claimsIdentity.FindFirst(ClaimTypes.NameIdentifier).Value;
             shoppingCart.ApplicationUserId = userId;
 
-            ShoppingCart cartFromDb =await _unitOfWork.ShoppingCart.Get(u=>u.ApplicationUserId == userId && u.ProductId == shoppingCart.ProductId);
+            ShoppingCart cartFromDb = await _unitOfWork.ShoppingCart.Get(u => u.ApplicationUserId == userId && u.ProductId == shoppingCart.ProductId);
 
-            if(cartFromDb != null)
+            if (cartFromDb != null)
             {
-             cartFromDb.Count += shoppingCart.Count;
+                cartFromDb.Count += shoppingCart.Count;
                 _unitOfWork.ShoppingCart.Update(cartFromDb);
             }
             else
             {
-            _unitOfWork.ShoppingCart.Add(shoppingCart);
+                _unitOfWork.ShoppingCart.Add(shoppingCart);
+                await _unitOfWork.Save();
+                var count = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == userId).Count();
+                HttpContext.Session.SetInt32(SD.SessionCart, count);
+
             }
             TempData["success"] = "Cart updated succesfully";
 
-           await _unitOfWork.Save();
             return RedirectToAction("Index");
         }
 

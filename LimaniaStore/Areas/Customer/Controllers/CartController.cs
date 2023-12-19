@@ -172,6 +172,7 @@ namespace LimaniaStore.Areas.Customer.Controllers
 					_unitOfWork.OrderHeader.UpdateStatus(id, SD.StatusApproved, SD.PaymentStatusApproved);
 					await _unitOfWork.Save();
 				}
+				HttpContext.Session.Clear();
 			}
 			List<ShoppingCart> shoppingCarts = _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == orderHeader.ApplicationUserId).ToList();
 			_unitOfWork.ShoppingCart.RemoveRange(shoppingCarts);
@@ -181,7 +182,7 @@ namespace LimaniaStore.Areas.Customer.Controllers
 
 		public async Task<IActionResult> Plus(int cartId)
 		{
-			var cartFromDb = await _unitOfWork.ShoppingCart.Get(c => c.Id == cartId);
+			var cartFromDb = await _unitOfWork.ShoppingCart.Get(c => c.Id == cartId, tracked: true);
 			cartFromDb.Count += 1;
 			_unitOfWork.ShoppingCart.Update(cartFromDb);
 			await _unitOfWork.Save();
@@ -189,9 +190,11 @@ namespace LimaniaStore.Areas.Customer.Controllers
 		}
 		public async Task<IActionResult> Minus(int cartId)
 		{
-			var cartFromDb = await _unitOfWork.ShoppingCart.Get(c => c.Id == cartId);
+			var cartFromDb = await _unitOfWork.ShoppingCart.Get(c => c.Id == cartId, tracked: true);
 			if (cartFromDb.Count <= 1)
 			{
+				HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
+
 				_unitOfWork.ShoppingCart.Remove(cartFromDb);
 			}
 			else
@@ -208,7 +211,8 @@ namespace LimaniaStore.Areas.Customer.Controllers
 
 		public async Task<IActionResult> Remove(int cartId)
 		{
-			var cartFromDb = await _unitOfWork.ShoppingCart.Get(c => c.Id == cartId);
+			var cartFromDb = await _unitOfWork.ShoppingCart.Get(c => c.Id == cartId, tracked: true);
+			HttpContext.Session.SetInt32(SD.SessionCart, _unitOfWork.ShoppingCart.GetAll(u => u.ApplicationUserId == cartFromDb.ApplicationUserId).Count() - 1);
 			_unitOfWork.ShoppingCart.Remove(cartFromDb);
 			await _unitOfWork.Save();
 			return RedirectToAction("Index");

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Limania.Utility;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Stripe;
+using Limania.DataAccess.DbInitializer;
 
 namespace LimaniaStore
 {
@@ -33,7 +34,28 @@ namespace LimaniaStore
 				options.AccessDeniedPath = $"/Identity/Account/AccessDenied";
 
 			});
+
+			builder.Services.AddAuthentication().AddFacebook(option =>
+			{
+				option.AppId = "326411533645932";
+				option.AppSecret = "a0d8efedcc3e0f6924a6b65034fabc55";
+			});
+
+
+			builder.Services.AddDistributedMemoryCache();
+			builder.Services.AddSession(options =>
+			{
+				options.IdleTimeout = TimeSpan.FromMinutes(100);
+				options.Cookie.HttpOnly = true;
+				options.Cookie.IsEssential = true;
+			});
+
+
+
+
+
 			builder.Services.AddRazorPages();
+			builder.Services.AddScoped<IDbInitializer, DbInitializer>();
 			builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 			builder.Services.AddScoped<IEmailSender, EmailSender>();
 
@@ -52,6 +74,8 @@ namespace LimaniaStore
 			StripeConfiguration.ApiKey = builder.Configuration.GetSection("Stripe:SecretKey").Get<string>();
 			app.UseRouting();
 			app.UseAuthentication();
+			app.UseSession();
+			SeedDatabase();
 			app.UseAuthorization();
 			app.MapRazorPages();
 
@@ -60,6 +84,14 @@ namespace LimaniaStore
 				pattern: "{area=Customer}/{controller=Home}/{action=Index}/{id?}");
 
 			app.Run();
+			void SeedDatabase()
+			{
+				using (var scope = app.Services.CreateScope())
+				{
+					var dbInitializer = scope.ServiceProvider.GetRequiredService<IDbInitializer>();
+					dbInitializer.Initialize();
+				}
+			}
 		}
 	}
 }
