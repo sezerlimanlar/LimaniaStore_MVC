@@ -30,14 +30,14 @@ namespace LimaniaStore.Areas.Customer.Controllers
 			{
 				ShoppingCartList = _unitOfWork.ShoppingCart.GetAll(s => s.ApplicationUserId == userId, includeProperties: "Product"),
 				OrderHeader = new()
-
-
 			};
 
-			foreach (var cart in ShoppingCartVM.ShoppingCartList)
+			IEnumerable<ProductImage> productImages = _unitOfWork.ProductImage.GetAll();
+			foreach(var cart in ShoppingCartVM.ShoppingCartList)
 			{
+				cart.Product.ProductImages = productImages.Where(x=>x.ProductId == cart.Product.Id).ToList();
 				cart.Price = GetPriceBasedOnQuantity(cart);
-				ShoppingCartVM.OrderHeader.OrderTotal += cart.Price * cart.Count;
+				ShoppingCartVM.OrderHeader.OrderTotal += (cart.Price * cart.Count);
 			}
 
 			return View(ShoppingCartVM);

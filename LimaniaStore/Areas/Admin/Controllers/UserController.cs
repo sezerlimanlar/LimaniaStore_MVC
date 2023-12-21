@@ -17,48 +17,51 @@ namespace LimaniaStore.Areas.Admin.Controllers
 
     public class UserController : Controller
     {
-        private readonly ApplicationDbContext _db;
+
         private readonly UserManager<IdentityUser> _userManager;
-        public UserController(ApplicationDbContext db, UserManager<IdentityUser> userManager)
+        private readonly RoleManager<IdentityRole> _roleManager;
+        private readonly IUnitOfWork _unitOfWork;
+        public UserController(IUnitOfWork unitOfWork, UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            _db = db;
+			_unitOfWork = unitOfWork;
             _userManager = userManager;
-        }
+			_roleManager= roleManager;
+
+		}
 
         public IActionResult Index()
         {
             return View();
         }
 
-        public IActionResult RoleManager(string userId)
+        public async Task<IActionResult> RoleManager(string userId)
         {
-            string? roleID = _db.UserRoles.FirstOrDefault(u => u.UserId == userId).RoleId;
             RoleManagmentVM RoleVM = new RoleManagmentVM()
             {
-                ApplicationUser = _db.ApplicationUsers.Include(u => u.Company).FirstOrDefault(u => u.Id == userId),
-                RoleList = _db.Roles.Select(i => new SelectListItem
+                ApplicationUser = await _unitOfWork.ApplicationUser.Get(u => u.Id == userId, includeProperties:"Company"),
+                RoleList = _roleManager.Roles.Select(i => new SelectListItem
                 {
                     Text = i.Name,
                     Value = i.Name
                 }),
-                CompanyList = _db.Companies.Select(i => new SelectListItem
+                CompanyList = _unitOfWork.Company.GetAll().Select(i => new SelectListItem
                 {
                     Text = i.Name,
                     Value = i.Id.ToString()
                 })
             };
-            RoleVM.ApplicationUser.Role = _db.Roles.FirstOrDefault(u => u.Id == roleID).Name;
-            return View(RoleVM);
+			RoleVM.ApplicationUser.Role = (await _userManager.GetRolesAsync(await _unitOfWork.ApplicationUser.Get(x => x.Id == userId))).FirstOrDefault();
+			return View(RoleVM);
         }
         [HttpPost]
-		public IActionResult RoleManager(RoleManagmentVM roleManagmentVM)
+		public async Task<IActionResult> RoleManager(RoleManagmentVM roleManagmentVM)
 		{
-			string roleID = _db.UserRoles.FirstOrDefault(u => u.UserId == roleManagmentVM.ApplicationUser.Id).RoleId;
-            string oldRole = _db.Roles.FirstOrDefault(u => u.Id == roleID).Name;
-			
-            if(!(roleManagmentVM.ApplicationUser.Role == oldRole))
+            string oldRole = (await _userManager.GetRolesAsync(await _unitOfWork.ApplicationUser.Get(x => x.Id == roleManagmentVM.ApplicationUser.Id))).FirstOrDefault();
+			ApplicationUser applicationUser = await _unitOfWork.ApplicationUser.Get(u => u.Id == roleManagmentVM.ApplicationUser.Id);
+
+
+			if (!(roleManagmentVM.ApplicationUser.Role == oldRole))
             {
-                ApplicationUser applicationUser = _db.ApplicationUsers.FirstOrDefault(u => u.Id == roleManagmentVM.ApplicationUser.Id);
                 if(roleManagmentVM.ApplicationUser.Role == SD.Role_User_Comp)
                 {
                     applicationUser.CompanyId = roleManagmentVM.ApplicationUser.CompanyId;
@@ -67,46 +70,33 @@ namespace LimaniaStore.Areas.Admin.Controllers
                 {
                     applicationUser.CompanyId = null;
                 }
-                _db.SaveChanges();
+                _unitOfWork.ApplicationUser.Update(applicationUser);
+				await _unitOfWork.Save();
 
                 _userManager.RemoveFromRoleAsync(applicationUser, oldRole).GetAwaiter().GetResult();
                 _userManager.AddToRoleAsync(applicationUser, roleManagmentVM.ApplicationUser.Role).GetAwaiter().GetResult();
+            }
+            else
+            {
+                if(oldRole == SD.Role_User_Comp && applicationUser.CompanyId != roleManagmentVM.ApplicationUser.CompanyId)
+                {
+                    applicationUser.CompanyId = roleManagmentVM.ApplicationUser.CompanyId;
+                    _unitOfWork.ApplicationUser.Update(applicationUser);
+                    await _unitOfWork.Save();
+                }
             }
 
 			return RedirectToAction("Index");
 		}
 
-		//GET İSTEĞİ DÜZ VERİ SİLME İŞLEMİ
-		/*public async Task<IActionResult> Delete(int? id)
-		{
-			Company product = await _unitOfWork.Company.Get(p => p.Id == id);
-			if (product == null)
-			{
-				return NotFound();
-			}
-			_unitOfWork.Company.Remove(product);
-			TempData["success"] = "Company Silme Başarılı!";
-			await _unitOfWork.Save();
-			return RedirectToAction("Index", "Company");
-
-		}*/
-
-
-
-
-
 		#region API CALLS
-		public IActionResult GetAll()
+		public async Task<IActionResult> GetAll()
         {
-            List<ApplicationUser> objUserList = _db.ApplicationUsers.Include(a => a.Company).ToList();
-
-            var userRoles = _db.UserRoles.ToList();
-            var roles = _db.Roles.ToList();
+            List<ApplicationUser> objUserList = _unitOfWork.ApplicationUser.GetAll(includeProperties:"Company").ToList();
 
             foreach (var user in objUserList)
             {
-                var roleId = userRoles.FirstOrDefault(u => u.UserId == user.Id).RoleId;
-                user.Role = roles.FirstOrDefault(u => u.Id == roleId).Name;
+                user.Role = (await _userManager.GetRolesAsync(user)).FirstOrDefault();
                 if (user.Company == null)
                 {
                     user.Company = new() { Name = "" };
@@ -119,7 +109,7 @@ namespace LimaniaStore.Areas.Admin.Controllers
         [HttpPost]
         public async Task<IActionResult> LockUnlock([FromBody] string id)
         {
-            var onjFromDb = _db.ApplicationUsers.FirstOrDefault(u => u.Id == id);
+            var onjFromDb = await _unitOfWork.ApplicationUser.Get(u => u.Id == id);
             if (onjFromDb == null)
             {
                 return Json(new { success = false, message = "Error while Locking/Unlocking" });
@@ -133,7 +123,8 @@ namespace LimaniaStore.Areas.Admin.Controllers
             {
                 onjFromDb.LockoutEnd = DateTime.Now.AddYears(1000);
             }
-            _db.SaveChanges();
+            _unitOfWork.ApplicationUser.Update(onjFromDb);
+            await _unitOfWork.Save();
             return Json(new { success = true, message = "Operation successful" });
 
 

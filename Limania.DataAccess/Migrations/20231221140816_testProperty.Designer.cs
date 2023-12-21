@@ -4,6 +4,7 @@ using Limania.DataAccess.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Limania.DataAccess.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20231221140816_testProperty")]
+    partial class testProperty
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -282,6 +285,9 @@ namespace Limania.DataAccess.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<double>("ListPrice")
                         .HasColumnType("float");
 
@@ -293,6 +299,9 @@ namespace Limania.DataAccess.Migrations
 
                     b.Property<double>("Price50")
                         .HasColumnType("float");
+
+                    b.Property<int>("TestProperty")
+                        .HasColumnType("int");
 
                     b.Property<string>("Tittle")
                         .IsRequired()
@@ -313,10 +322,12 @@ namespace Limania.DataAccess.Migrations
                             CategoryId = 5,
                             Description = "Öyle ki bir mektubunda Piraye'ye 'Sen benim en yakın insanımsın. ' diyor Nazım.",
                             ISBN = "SWD9999001",
+                            ImageUrl = "",
                             ListPrice = 99.0,
                             Price = 90.0,
                             Price100 = 80.0,
                             Price50 = 85.0,
+                            TestProperty = 0,
                             Tittle = "Nazım İle Piraye"
                         },
                         new
@@ -326,34 +337,14 @@ namespace Limania.DataAccess.Migrations
                             CategoryId = 9,
                             Description = "Hanımın Çiftliği, Orhan Kemal'in üç ciltlik romanıdır. Kitap, Vukuat Var, Hanımın Çiftliği ve Kaçak ciltlerinden oluşmaktadır",
                             ISBN = "SWD9999002",
+                            ImageUrl = "",
                             ListPrice = 105.0,
                             Price = 100.0,
                             Price100 = 90.0,
                             Price50 = 95.0,
+                            TestProperty = 0,
                             Tittle = "Hanımın Çiftliği"
                         });
-                });
-
-            modelBuilder.Entity("Limania.Models.ProductImage", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductImages");
                 });
 
             modelBuilder.Entity("Limania.Models.ShoppingCart", b =>
@@ -659,17 +650,6 @@ namespace Limania.DataAccess.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("Limania.Models.ProductImage", b =>
-                {
-                    b.HasOne("Limania.Models.Product", "Product")
-                        .WithMany("ProductImages")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("Limania.Models.ShoppingCart", b =>
                 {
                     b.HasOne("Limania.Models.ApplicationUser", "ApplicationUser")
@@ -747,11 +727,6 @@ namespace Limania.DataAccess.Migrations
                         .HasForeignKey("CompanyId");
 
                     b.Navigation("Company");
-                });
-
-            modelBuilder.Entity("Limania.Models.Product", b =>
-                {
-                    b.Navigation("ProductImages");
                 });
 #pragma warning restore 612, 618
         }
